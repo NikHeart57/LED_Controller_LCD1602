@@ -76,6 +76,11 @@ char schedule_sunrise[2]	= {8, 0};
 char schedule_day[2]		= {10, 0};
 char schedule_sunset[2]		= {18, 0};
 char schedule_night[2]		= {20, 0};
+	
+char schedule_sunrise_default[2]	= {8, 0};
+char schedule_day_default[2]		= {10, 0};
+char schedule_sunset_default[2]		= {18, 0};
+char schedule_night_default[2]		= {20, 0};
 
 	
 int	schedule_realtime_i	= time[time_hour] * 60					+ time[time_minute];
@@ -98,6 +103,55 @@ int main(void)
 	LCD1602_Init_8pins();
 	
 	DS1307_ReadTime(time);
+	
+
+	schedule_sunrise[0] = EEPROM_ReadByte(0);
+	if (schedule_sunrise[0] >= 24)
+	{
+		schedule_sunrise[0] = schedule_sunrise_default[0];
+	}
+		
+	schedule_sunrise[1] = EEPROM_ReadByte(1);
+	if (schedule_sunrise[1] >= 60)
+	{
+		schedule_sunrise[1] = schedule_sunrise_default[1];
+	}
+	
+	schedule_day[0] = EEPROM_ReadByte(2);
+	if (schedule_day[0] >= 24)
+	{
+		schedule_day[0] = schedule_day_default[0];
+	}
+	
+	schedule_day[1] = EEPROM_ReadByte(3);
+	if (schedule_day[1] >= 60)
+	{
+		schedule_day[1] = schedule_day_default[1];
+	}
+
+	schedule_sunset[0] = EEPROM_ReadByte(4);
+	if (schedule_sunset[0] >= 24)
+	{
+		schedule_sunset[0] = schedule_sunset_default[0];
+	}
+	
+	schedule_sunset[1] = EEPROM_ReadByte(5);
+	if (schedule_sunset[1] >= 60)
+	{
+		schedule_sunset[1] = schedule_sunset_default[1];
+	}
+	
+	schedule_night[0] = EEPROM_ReadByte(6);
+	if (schedule_night[0] >= 24)
+	{
+		schedule_night[0] = schedule_night_default[0];
+	}
+	
+	schedule_night[1] = EEPROM_ReadByte(7);
+	if (schedule_night[1] >= 60)
+	{
+		schedule_night[1] = schedule_night_default[1];
+	}
 	
 	while (true)
 	{
@@ -140,6 +194,21 @@ ISR(INT0_vect)
 		
 	} while (!(success_counter > 1000 || error_counter > 1000));
 	
+	/*
+	Send_Cmd(CMD_DISPLAY_CLR);
+	
+	Set_Pos(0,0);
+	Print_String((char*)itoa(temp, itoa_temp, 2));
+	
+	Set_Pos(8,0);
+	Print_String((char*)itoa(counter++, itoa_temp, 10));
+	
+	Set_Pos(0,1);
+	Print_String((char*)itoa(error_counter, itoa_temp, 10));
+	
+	Set_Pos(8,1);
+	Print_String((char*)itoa(success_counter, itoa_temp, 10));
+	*/
 	
 	switch (temp)
 	{
@@ -1204,6 +1273,15 @@ ISR(INT0_vect)
 				case status_scedule_night_minute:
 					// Код
 					status = status_normal;
+					
+					EEPROM_WriteByte(0, schedule_sunrise[0]);
+					EEPROM_WriteByte(1, schedule_sunrise[1]);
+					EEPROM_WriteByte(2, schedule_day[0]);
+					EEPROM_WriteByte(3, schedule_day[1]);
+					EEPROM_WriteByte(4, schedule_sunset[0]);
+					EEPROM_WriteByte(5, schedule_sunset[1]);
+					EEPROM_WriteByte(6, schedule_night[0]);
+					EEPROM_WriteByte(7, schedule_night[1]);
 					
 					Set_Pos(0,0);
 					Print_String((char*)"Vrema:          ");
