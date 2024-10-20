@@ -170,12 +170,12 @@ ISR(INT0_vect)
 	
 	do	// Опрос порта D до тех пор пока не будет определена кнопка (типа против дребезга и некорректных значений в порте)
 	{
-		_delay_us(20);
+		_delay_us(10);
 		
-		temp = PIND;
-		temp = temp >> 4;
+		temp = PINC;
+		temp = temp & 0b11110000;
 			
-		if (temp == 0b00000111 || temp == 0b00001011 || temp == 0b00001101 || temp == 0b00001110)					// Если после 10 опросов нет значения кнопки то выход из прерывания
+		if (temp == 0b01110000 || temp == 0b10110000 || temp == 0b11010000 || temp == 0b11100000)					// Если после 10 опросов нет значения кнопки то выход из прерывания
 		{
 			success_counter++;
 		}
@@ -192,28 +192,13 @@ ISR(INT0_vect)
 			return;
 		}
 		
-	} while (!(success_counter > 1000 || error_counter > 1000));
-	
-	/*
-	Send_Cmd(CMD_DISPLAY_CLR);
-	
-	Set_Pos(0,0);
-	Print_String((char*)itoa(temp, itoa_temp, 2));
-	
-	Set_Pos(8,0);
-	Print_String((char*)itoa(counter++, itoa_temp, 10));
-	
-	Set_Pos(0,1);
-	Print_String((char*)itoa(error_counter, itoa_temp, 10));
-	
-	Set_Pos(8,1);
-	Print_String((char*)itoa(success_counter, itoa_temp, 10));
-	*/
+	} while (!(success_counter > 200 || error_counter > 1000));
+
 	
 	switch (temp)
 	{
 		// 1 Нажата кнопка инкремента
-		case 0b00000111:
+		case 0b11100000:
 			button = button_increment;
 			
 			switch (status)
@@ -596,7 +581,7 @@ ISR(INT0_vect)
 			break;
 		
 		// 2 Нажата кнопка декремента
-		case 0b00001011:
+		case 0b11010000:
 			button = button_decrement;
 			
 			switch (status)
@@ -981,7 +966,7 @@ ISR(INT0_vect)
 		
 		
 		// 3 Нажата кнопка настройки времени
-		case 0b00001101:
+		case 0b10110000:
 			button = button_time;
 			
 			switch (status)
@@ -1098,7 +1083,7 @@ ISR(INT0_vect)
 		
 		
 		// 4 Нажата кнопка настройки расписания
-		case 0b00001110:
+		case 0b01110000:
 			button = button_schedule;
 			
 			switch (status)
@@ -1431,9 +1416,14 @@ ISR(TIMER1_COMPA_vect)
 
 void Setup_INT(void)
 {
-	DDRB |= 0;
-	PORTB |= 0b11110000;
-	
+	DDRA	= 0b11111111;
+	PORTA	= 0b00000000;
+	DDRB	= 0b00001111;						// 0 вход, 1 вЫход
+	PORTB	= 0b00000000;
+	DDRD	= 0b00000000;
+	PORTD	= 0b00000000;
+	DDRC	= 0b00000000;
+	PORTC	= 0b11110000;	
 	
 	GICR |= (0 << INT1)|(1 << INT0)|(0 << INT2);						// General Interrupt Control Register - Установка битов INT1, INT0 или INT2 разрешает прерывания при возникновении события на соответствующем выводе микроконтроллера AVR, а сброс — запрещает.
 	MCUCR |= (1 << ISC11)|(0 << ISC10)|(1 << ISC01)|(0 << ISC00);		// 10	- Перывание по спадающему фронту INT0, INT1
